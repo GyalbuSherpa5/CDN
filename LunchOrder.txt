@@ -1,0 +1,318 @@
+package demo;
+
+import java.text.NumberFormat;
+
+class Pizza {
+    private String size;
+    private int cheeseToppings;
+    private int pepperoniToppings;
+    private int hamToppings;
+
+    public Pizza(String size, int cheeseToppings, int pepperoniToppings, int hamToppings) {
+        this.size = size;
+        this.cheeseToppings = cheeseToppings;
+        this.pepperoniToppings = pepperoniToppings;
+        this.hamToppings = hamToppings;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public int getCheeseToppings() {
+        return cheeseToppings;
+    }
+
+    public void setCheeseToppings(int cheeseToppings) {
+        this.cheeseToppings = cheeseToppings;
+    }
+
+    public int getPepperoniToppings() {
+        return pepperoniToppings;
+    }
+
+    public void setPepperoniToppings(int pepperoniToppings) {
+        this.pepperoniToppings = pepperoniToppings;
+    }
+
+    public int getHamToppings() {
+        return hamToppings;
+    }
+
+    public void setHamToppings(int hamToppings) {
+        this.hamToppings = hamToppings;
+    }
+
+    public double calcCost() {
+        double toppingCost = 2 * (cheeseToppings + pepperoniToppings + hamToppings);
+
+        if (size.equals("small")) {
+            return 10 + toppingCost;
+        } else if (size.equals("medium")) {
+            return 12 + toppingCost;
+        } else if (size.equals("large")) {
+            return 14 + toppingCost;
+        } else {
+            throw new IllegalArgumentException("Invalid pizza size");
+        }
+    }
+
+    public String getDescription() {
+        String description = "Size: " + size + "\n";
+        description += "Cheese toppings: " + cheeseToppings + "\n";
+        description += "Pepperoni toppings: " + pepperoniToppings + "\n";
+        description += "Ham toppings: " + hamToppings + "\n";
+        description += "Cost: $" + String.format("%.2f", calcCost());
+        return description;
+    }
+}
+
+
+class Coffee {
+    private String size;
+    private String type;
+    private int shots;
+    private String milk;
+    private String topping;
+
+    public Coffee(String size, String type, int shots, String milk, String topping) {
+        this.size = size;
+        this.type = type;
+        this.shots = shots;
+        this.milk = milk;
+        this.topping = topping;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public int getShots() {
+        return shots;
+    }
+
+    public void setShots(int shots) {
+        this.shots = shots;
+    }
+
+    public String getMilk() {
+        return milk;
+    }
+
+    public void setMilk(String milk) {
+        this.milk = milk;
+    }
+
+    public String getTopping() {
+        return topping;
+    }
+
+    public void setTopping(String topping) {
+        this.topping = topping;
+    }
+
+    public double calcCost() {
+        double cost = 0.0;
+
+        // Calculate base cost based on size
+        if (size.equalsIgnoreCase("small")) {
+            cost += 3.5;
+        } else if (size.equalsIgnoreCase("medium")) {
+            cost += 5.0;
+        } else if (size.equalsIgnoreCase("large")) {
+            cost += 6.0;
+        }
+
+        // Adjust cost based on number of shots
+        cost += shots * 1.0;
+
+        // Adjust cost based on milk type
+        if (milk.equalsIgnoreCase("skim") || milk.equalsIgnoreCase("lactose-free") ||
+                milk.equalsIgnoreCase("oat") || milk.equalsIgnoreCase("almond") ||
+                milk.equalsIgnoreCase("soy")) {
+            cost += 0.5;
+        }
+
+        // Adjust cost based on topping
+        if (topping != null) {
+            String[] toppings = topping.split(",");
+            cost += toppings.length * 0.5;
+        }
+
+        // Special cases for long black and long macchiato
+        if (type.equalsIgnoreCase("long black") || type.equalsIgnoreCase("long macchiato")) {
+            if (size.equalsIgnoreCase("small")) {
+                cost = 4.5;
+            } else if (size.equalsIgnoreCase("medium")) {
+                cost = 5.0;
+            } else if (size.equalsIgnoreCase("large")) {
+                cost = 6.0;
+            }
+        }
+
+        return cost;
+    }
+
+    public String getDescription() {
+        String description = "Size: " + size +
+                "\nTopping(s): " + (topping != null ? topping : "None") +
+                "\nCost: $" + calcCost();
+        return description;
+    }
+}
+
+class Account
+{
+    private final double RATE = 0.035; // interest rate of 3.5%
+    private long acctNumber;
+    private double balance;
+    private String name;
+    //-----------------------------------------------------------------
+    // Sets up the account using the specified data and an initial
+    // balance of 0.
+    //-----------------------------------------------------------------
+    public Account(String owner, long account)
+    {
+        name = owner;
+        acctNumber = account;
+        balance = 0.0;
+    }
+    //-----------------------------------------------------------------
+    // Sets up the account by defining its owner, account number,
+    // and initial balance.
+    //-----------------------------------------------------------------
+    public Account(String owner, long account, double initial)
+    {
+        name = owner;
+        acctNumber = account;
+        balance = initial;
+    }
+    //-----------------------------------------------------------------
+    // Deposits the specified amount into the account. Returns the
+    // new balance.
+    //-----------------------------------------------------------------
+    public double deposit(double amount)
+    {
+        balance = balance + amount;
+        return balance;
+    }
+    //-----------------------------------------------------------------
+    // Withdraws the specified amount from the account and applies
+    // the fee. Returns the new balance.
+    //-----------------------------------------------------------------
+    public double withdraw(double amount, double fee)
+    {
+        balance = balance - amount - fee;
+        return balance;
+    }
+
+    // Adds interest to the account and returns the new balance.
+    //-----------------------------------------------------------------
+    public double addInterest()
+    {
+        balance += (balance * RATE);
+        return balance;
+    }
+    //-----------------------------------------------------------------
+    // Returns the current balance of the account.
+    //-----------------------------------------------------------------
+    public double getBalance()
+    {
+        return balance;
+    }
+    //-----------------------------------------------------------------
+    // Returns a one-line description of the account as a string.
+    //-----------------------------------------------------------------
+    public String toString()
+    {
+        NumberFormat fmt = NumberFormat.getCurrencyInstance();
+        return (acctNumber + "\t" + name + "\t" + fmt.format(balance));
+    }
+}
+
+public class LunchOrder {
+    public static void main(String[] args) {
+        // Create customer account
+        Account customerAccount = new Account("John Doe", 1234567890, 1000.0);
+
+        // Generate 10 test orders
+        for (int i = 1; i <= 10; i++) {
+            System.out.println("Order " + i + ":");
+            Pizza pizza = new Pizza("medium", 1, 2, 0);
+            Coffee coffee = new Coffee("large", "latte", 2, "skim", "caramel");
+
+            // Print order details
+            System.out.println("Pizza:");
+            System.out.println(pizza.getDescription());
+            System.out.println("Coffee:");
+            System.out.println(coffee.getDescription());
+
+            // Calculate total cost
+            double totalCost = pizza.calcCost() + coffee.calcCost();
+            System.out.println("Total Cost: $" + String.format("%.2f", totalCost));
+
+            // Pay using customer wallet
+            if (customerAccount.getBalance() >= totalCost) {
+                customerAccount.withdraw(totalCost, 0);
+                System.out.println("Payment successful!");
+                System.out.println("Remaining Balance: " + formatCurrency(customerAccount.getBalance()));
+            } else {
+                System.out.println("Insufficient balance in the account.");
+                System.out.println("Please deposit more funds.");
+            }
+
+            System.out.println("-----------------------------");
+        }
+
+        // Deposit money to customer account
+        double depositAmount = 500.0;
+        customerAccount.deposit(depositAmount);
+        System.out.println("Deposit of " + formatCurrency(depositAmount) + " successful!");
+        System.out.println("Current Balance: " + formatCurrency(customerAccount.getBalance()));
+
+        // Pay for a lunch
+        double lunchCost = 20.0;
+        if (customerAccount.getBalance() >= lunchCost) {
+            customerAccount.withdraw(lunchCost, 0);
+            System.out.println("Payment successful!");
+            System.out.println("Remaining Balance: " + formatCurrency(customerAccount.getBalance()));
+        } else {
+            System.out.println("Insufficient balance in the account.");
+        }
+
+        // Transfer money to another account
+        Account recipientAccount = new Account("Jane Smith", 98765, 0.0);
+        double transferAmount = 200.0;
+        if (customerAccount.getBalance() >= transferAmount) {
+            customerAccount.withdraw(transferAmount, 0);
+            recipientAccount.deposit(transferAmount);
+            System.out.println("Transfer of " + formatCurrency(transferAmount) + " successful!");
+            System.out.println("Sender Balance: " + formatCurrency(customerAccount.getBalance()));
+            System.out.println("Recipient Balance: " + formatCurrency(recipientAccount.getBalance()));
+        } else {
+            System.out.println("Insufficient balance in the account for transfer.");
+        }
+    }
+
+    // Helper method to format currency
+    public static String formatCurrency(double amount) {
+        NumberFormat fmt = NumberFormat.getCurrencyInstance();
+        return fmt.format(amount);
+    }
+}
