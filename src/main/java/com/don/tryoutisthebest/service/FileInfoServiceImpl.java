@@ -33,6 +33,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         log.info("FileInfoServiceImpl | saving fileContent ");
         FileContent fileContent = new FileContent();
         fileContent.setActualData(mime.getMime(filePart));
+        fileContent.setFileName(filePart.filename());
         Mono<FileContent> savedFileContentMono = fileContentRepository.save(fileContent);
 
         FileInfo fileInfo = new FileInfo();

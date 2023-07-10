@@ -3,15 +3,18 @@ package com.don.tryoutisthebest.controller;
 import com.don.tryoutisthebest.dto.FileResponse;
 import com.don.tryoutisthebest.service.FileInfoService;
 import com.don.tryoutisthebest.util.files.DetectActualContent;
+import com.don.tryoutisthebest.util.minio.MinioUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.exception.TikaException;
+import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -21,9 +24,10 @@ public class FileController {
 
     private final FileInfoService fileInfoService;
     private final DetectActualContent detectActualContent;
+    private final MinioUtil minioService;
 
     @PostMapping("/work/{id}/{data}")
-    public String works(@PathVariable String id,@PathVariable String data){
+    public String works(@PathVariable String id, @PathVariable String data) {
         System.out.println(id);
         System.out.println(data);
         return "working";
@@ -31,24 +35,25 @@ public class FileController {
 
     @PostMapping("/uploads")
     public Mono<String> uploadFile(FilePart filePart) throws IOException, TikaException {
-        log.info("FileController | uploadFile is called ");
 
-        if(detectActualContent.detectFileExtension(filePart).equals("application/json") || detectActualContent.detectFileExtension(filePart).equals("text/plain")
-        ){
-            boolean result = detectActualContent.detectJsonAndTextType(filePart);
-            if(result){
-                fileInfoService.saveFileInfo(filePart);
-            }
-            else {
-                throw new RuntimeException("not valid");
+        String fileExtension = String.valueOf(filePart.headers().getContentType());
+        String actualExtension = detectActualContent.detectFileExtension(filePart);
+
+        if (!actualExtension.equals(fileExtension)) {
+            throw new RuntimeException("File extension mismatch");
+        }
+
+        if (actualExtension.equals("application/json") || actualExtension.equals("text/plain")) {
+            if (!detectActualContent.detectJsonAndTextType(filePart)) {
+                throw new RuntimeException("Not a valid content");
             }
         }
 
+        minioService.putObject(filePart);
         fileInfoService.saveFileInfo(filePart);
 
-//        minioService.putObject(filePart);
-
         return Mono.just("saved");
+
     }
 
     @PutMapping("/update/{id}")
