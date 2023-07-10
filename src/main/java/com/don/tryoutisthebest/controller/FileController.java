@@ -3,6 +3,7 @@ package com.don.tryoutisthebest.controller;
 import com.don.tryoutisthebest.dto.FileResponse;
 import com.don.tryoutisthebest.service.FileInfoService;
 import com.don.tryoutisthebest.util.files.DetectActualContent;
+import com.don.tryoutisthebest.util.files.FileDetector;
 import com.don.tryoutisthebest.util.minio.MinioUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import java.io.IOException;
 public class FileController {
 
     private final FileInfoService fileInfoService;
-    private final DetectActualContent detectActualExtension;
+    private final FileDetector detector;
     private final MinioUtil minioService;
 
     @PostMapping("/work/{id}/{data}")
@@ -33,20 +34,8 @@ public class FileController {
 
     @PostMapping("/uploads")
     public Mono<String> uploadFile(FilePart filePart) throws IOException, TikaException {
-
-        String fileExtension = String.valueOf(filePart.headers().getContentType());
-        String actualExtension = detectActualExtension.detectFileExtension(filePart);
-
-        if (!actualExtension.equals(fileExtension)) {
-            throw new RuntimeException("File extension mismatch");
-        }
-
-        if (actualExtension.equals("application/json")
-                && (!detectActualExtension.detectJsonAndTextType(filePart))){
-                throw new RuntimeException("Not a valid content");
-
-        }
-
+        log.info("FileController | uploadFile is called ");
+        detector.detect(filePart);
         minioService.putObject(filePart);
         fileInfoService.saveFileInfo(filePart);
 
