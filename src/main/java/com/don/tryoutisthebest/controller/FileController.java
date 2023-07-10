@@ -41,10 +41,10 @@ public class FileController {
             throw new RuntimeException("File extension mismatch");
         }
 
-        if (actualExtension.equals("application/json") || actualExtension.equals("text/plain")) {
-            if (!detectActualExtension.detectJsonAndTextType(filePart)) {
+        if (actualExtension.equals("application/json")
+                && (!detectActualExtension.detectJsonAndTextType(filePart))){
                 throw new RuntimeException("Not a valid content");
-            }
+
         }
 
         minioService.putObject(filePart);
