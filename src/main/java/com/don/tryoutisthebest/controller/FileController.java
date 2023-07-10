@@ -7,14 +7,12 @@ import com.don.tryoutisthebest.util.minio.MinioUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.exception.TikaException;
-import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -23,7 +21,7 @@ import java.util.Objects;
 public class FileController {
 
     private final FileInfoService fileInfoService;
-    private final DetectActualContent detectActualContent;
+    private final DetectActualContent detectActualExtension;
     private final MinioUtil minioService;
 
     @PostMapping("/work/{id}/{data}")
@@ -37,14 +35,14 @@ public class FileController {
     public Mono<String> uploadFile(FilePart filePart) throws IOException, TikaException {
 
         String fileExtension = String.valueOf(filePart.headers().getContentType());
-        String actualExtension = detectActualContent.detectFileExtension(filePart);
+        String actualExtension = detectActualExtension.detectFileExtension(filePart);
 
         if (!actualExtension.equals(fileExtension)) {
             throw new RuntimeException("File extension mismatch");
         }
 
         if (actualExtension.equals("application/json") || actualExtension.equals("text/plain")) {
-            if (!detectActualContent.detectJsonAndTextType(filePart)) {
+            if (!detectActualExtension.detectJsonAndTextType(filePart)) {
                 throw new RuntimeException("Not a valid content");
             }
         }
