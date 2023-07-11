@@ -15,7 +15,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class FileContent {
     @Id
     private String id;
+
     private String fileName;
+
     private String actualData;
 
 }

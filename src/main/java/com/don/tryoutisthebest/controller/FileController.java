@@ -1,10 +1,10 @@
 package com.don.tryoutisthebest.controller;
 
-import com.don.tryoutisthebest.dto.FileResponse;
+import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.service.FileInfoService;
-import com.don.tryoutisthebest.util.files.DetectActualContent;
-import com.don.tryoutisthebest.util.files.FileDetector;
-import com.don.tryoutisthebest.util.minio.MinioUtil;
+import com.don.tryoutisthebest.service.FileService;
+import com.don.tryoutisthebest.util.files.GetMime;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.exception.TikaException;
@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -21,36 +22,30 @@ import java.io.IOException;
 @RequestMapping("files")
 public class FileController {
 
+    private final FileService fileService;
     private final FileInfoService fileInfoService;
-    private final FileDetector detector;
-    private final MinioUtil minioService;
+    private final ObjectMapper objectMapper;
+    private final GetMime mime;
 
-    @PostMapping("/work/{id}/{data}")
-    public String works(@PathVariable String id, @PathVariable String data) {
-        System.out.println(id);
-        System.out.println(data);
+    @PostMapping("/work/{fileName}")
+    public String works(@PathVariable String fileName, @RequestBody Map<String, Object> requestBody) throws IOException {
         return "working";
     }
 
     @PostMapping("/uploads")
     public Mono<String> uploadFile(FilePart filePart) throws IOException, TikaException {
-        log.info("FileController | uploadFile is called ");
-        detector.detect(filePart);
-        minioService.putObject(filePart);
-        fileInfoService.saveFileInfo(filePart);
 
-        return Mono.just("saved");
+        log.info("FileController | uploadFile is called :  ");
+
+        return fileService.uploadFile(filePart);
 
     }
 
     @PutMapping("/update/{id}")
-    public Mono<String> updateFile(FilePart filePart, @PathVariable String id) throws IOException {
+    public Mono<String> updateFile(FilePart filePart, @PathVariable String id) throws IOException, TikaException {
         log.info("FileController | updateFile is called ");
-        fileInfoService.updateFileInfo(filePart, id);
 
-//        minioService.putObject(filePart);
-
-        return Mono.just("updated");
+        return fileService.updateFile(filePart,id);
     }
 
     @GetMapping("/getById/{id}")

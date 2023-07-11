@@ -1,6 +1,6 @@
 package com.don.tryoutisthebest.service;
 
-import com.don.tryoutisthebest.dto.FileResponse;
+import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.enums.FileInfoStatus;
 import com.don.tryoutisthebest.model.FileContent;
 import com.don.tryoutisthebest.model.FileInfo;
@@ -10,6 +10,7 @@ import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.mapper.FileInfoToResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -36,13 +37,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         fileContent.setFileName(filePart.filename());
         Mono<FileContent> savedFileContentMono = fileContentRepository.save(fileContent);
 
-        FileInfo fileInfo = new FileInfo();
-        fileInfo.setName(filePart.filename());
-        fileInfo.setPath("dummy");
-        fileInfo.setSize(filePart.headers().size());
-        fileInfo.setCreatedBy("don");
-        fileInfo.setStatus(FileInfoStatus.ACTIVE);
-        fileInfo.setContentType(String.valueOf(filePart.headers().getContentType()));
+        FileInfo fileInfo = getFileInfo(filePart);
 
         log.info("FileInfoServiceImpl | saving fileInfo ");
         savedFileContentMono
@@ -50,6 +45,18 @@ public class FileInfoServiceImpl implements FileInfoService {
                     fileInfo.setFileContentId(savedFileContent.getId());
                     return fileInfoRepository.save(fileInfo);
                 }).subscribe();
+    }
+
+    @NotNull
+    private static FileInfo getFileInfo(FilePart filePart) {
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setName(filePart.filename());
+        fileInfo.setPath("dummy");
+        fileInfo.setSize(filePart.headers().size());
+        fileInfo.setCreatedBy("don");
+        fileInfo.setStatus(FileInfoStatus.ACTIVE);
+        fileInfo.setContentType(String.valueOf(filePart.headers().getContentType()));
+        return fileInfo;
     }
 
     @Override

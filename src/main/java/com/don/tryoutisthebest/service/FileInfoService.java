@@ -1,11 +1,7 @@
 package com.don.tryoutisthebest.service;
 
-import com.don.tryoutisthebest.dto.FileResponse;
-import com.don.tryoutisthebest.model.FileContent;
-import com.don.tryoutisthebest.model.FileInfo;
-import org.apache.tika.exception.TikaException;
+import com.don.tryoutisthebest.resources.FileResponse;
 import org.springframework.http.codec.multipart.FilePart;
-import org.xml.sax.SAXException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

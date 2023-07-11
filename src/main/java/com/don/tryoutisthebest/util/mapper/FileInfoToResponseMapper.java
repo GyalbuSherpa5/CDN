@@ -1,6 +1,6 @@
 package com.don.tryoutisthebest.util.mapper;
 
-import com.don.tryoutisthebest.dto.FileResponse;
+import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.model.FileInfo;
 import org.springframework.stereotype.Component;
 
