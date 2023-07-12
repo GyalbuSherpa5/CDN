@@ -4,6 +4,7 @@ import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.service.FileInfoService;
 import com.don.tryoutisthebest.service.FileService;
 import com.don.tryoutisthebest.util.files.GetMime;
+import com.don.tryoutisthebest.util.minio.MinioUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -24,11 +26,13 @@ public class FileController {
 
     private final FileService fileService;
     private final FileInfoService fileInfoService;
-    private final ObjectMapper objectMapper;
     private final GetMime mime;
+    private final MinioUtil minioUtil;
 
     @PostMapping("/work/{fileName}")
     public String works(@PathVariable String fileName, @RequestBody Map<String, Object> requestBody) throws IOException {
+        File file = mime.convertStringToFile(requestBody.values().toString(), fileName);
+        minioUtil.putObject(file);
         return "working";
     }
 

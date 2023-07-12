@@ -11,6 +11,7 @@ spring:
     mongodb:
       uri: mongodb+srv://iamdon123:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
       database: don
+      auto-index-creation: false
 #      host : localhost
 #      database: don
 #      port: 27017

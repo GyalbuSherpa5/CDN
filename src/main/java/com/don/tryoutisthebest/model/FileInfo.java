@@ -17,7 +17,7 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "file_info")
+@Document("file_info")
 public class FileInfo{
     @Id
     private String id;

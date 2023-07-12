@@ -21,6 +21,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public Mono<String> uploadFile(FilePart filePart) throws TikaException, IOException {
         detector.detect(filePart);
+        minioService.putObject(filePart);
         fileInfoService.saveFileInfo(filePart);
         return Mono.just("done");
     }
