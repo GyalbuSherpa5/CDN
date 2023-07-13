@@ -13,6 +13,7 @@ import com.don.tryoutisthebest.util.mapper.FileInfoToResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javers.core.Javers;
+import org.javers.core.metamodel.object.CdoSnapshot;
 import org.javers.core.metamodel.object.CdoSnapshotState;
 import org.javers.repository.jql.QueryBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -159,6 +161,10 @@ public class FileInfoServiceImpl implements FileInfoService {
                 .map(fileInfoToResponseMapper);
     }
 
+    /*
+
+    we'll see you later hai bro
+
     @Override
     public FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion) {
 
@@ -188,6 +194,36 @@ public class FileInfoServiceImpl implements FileInfoService {
 
         return fileInfoAuditRepo.findById(fileInfoId).map(fileInfoToResponseMapper).orElseThrow(() -> new RuntimeException("id not found"));
 
+    }
+*/
+
+    @Override
+    public FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion) {
+        FileContent fileContent = rollbackFileContentToSnapshot(fileContentId, snapshotVersion);
+        FileInfo fileInfo = rollbackFileInfoToSnapshot(fileInfoId, snapshotVersion);
+
+        fileContentAuditRepo.save(fileContent);
+        fileInfoAuditRepo.save(fileInfo);
+
+        return fileInfoAuditRepo.findById(fileInfoId)
+                .map(fileInfoToResponseMapper)
+                .orElseThrow(() -> new RuntimeException("id not found"));
+    }
+
+    private FileContent rollbackFileContentToSnapshot(String fileContentId, int snapshotVersion) {
+        QueryBuilder jqlQuery = QueryBuilder.byInstanceId(fileContentId, FileContent.class).withVersion(snapshotVersion);
+        Optional<CdoSnapshot> snapshot = javers.findSnapshots(jqlQuery.build()).stream().findFirst();
+
+        return snapshot.map(s -> javers.getJsonConverter().fromJson(javers.getJsonConverter().toJson(s.getState()), FileContent.class))
+                .orElse(new FileContent());
+    }
+
+    private FileInfo rollbackFileInfoToSnapshot(String fileInfoId, int snapshotVersion) {
+        QueryBuilder jqlQuery = QueryBuilder.byInstanceId(fileInfoId, FileInfo.class).withVersion(snapshotVersion);
+        Optional<CdoSnapshot> snapshot = javers.findSnapshots(jqlQuery.build()).stream().findFirst();
+
+        return snapshot.map(s -> javers.getJsonConverter().fromJson(javers.getJsonConverter().toJson(s.getState()), FileInfo.class))
+                .orElse(new FileInfo());
     }
 
     @Override
