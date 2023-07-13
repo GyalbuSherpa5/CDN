@@ -31,8 +31,13 @@ public class FileController {
 
     @PostMapping("/work/{fileName}")
     public String works(@PathVariable String fileName, @RequestBody Map<String, Object> requestBody) throws IOException {
-        File file = mime.convertStringToFile(requestBody.values().toString(), fileName);
-        minioUtil.putObject(file);
+//        File file = mime.convertStringToFile(requestBody.values().toString(), fileName);
+//        minioUtil.putObject(file);
+
+        System.out.println(fileName);
+        FilePart filePart = mime.createFilePart(fileName, requestBody.values().toString());
+        System.out.println(filePart.filename());
+        minioUtil.putObject(filePart);
         return "working";
     }
 
@@ -49,7 +54,7 @@ public class FileController {
     public Mono<String> updateFile(FilePart filePart, @PathVariable String id) throws IOException, TikaException {
         log.info("FileController | updateFile is called ");
 
-        return fileService.updateFile(filePart,id);
+        return fileService.updateFile(filePart, id);
     }
 
     @GetMapping("/getById/{id}")
