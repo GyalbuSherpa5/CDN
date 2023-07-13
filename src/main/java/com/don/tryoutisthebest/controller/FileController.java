@@ -77,4 +77,11 @@ public class FileController {
         return fileInfoService.deleteAllFileContent();
     }
 
+    @GetMapping("/roll")
+    public FileResponse rollbackToSnapshot(@RequestParam() String fileContentId, @RequestParam() String fileInfoId, @RequestParam("snapshotVersion") int snapshotVersion) {
+
+        return fileInfoService.rollbackToSnapshot(fileContentId, fileInfoId, snapshotVersion);
+
+    }
+
 }

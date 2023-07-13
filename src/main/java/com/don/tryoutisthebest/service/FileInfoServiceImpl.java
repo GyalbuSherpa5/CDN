@@ -1,5 +1,7 @@
 package com.don.tryoutisthebest.service;
 
+import com.don.tryoutisthebest.repository.FileContentAuditRepo;
+import com.don.tryoutisthebest.repository.FileInfoAuditRepo;
 import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.enums.FileInfoStatus;
 import com.don.tryoutisthebest.model.FileContent;
@@ -10,13 +12,18 @@ import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.mapper.FileInfoToResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.javers.core.Javers;
+import org.javers.core.metamodel.object.CdoSnapshotState;
+import org.javers.repository.jql.QueryBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -24,11 +31,18 @@ import java.io.IOException;
 public class FileInfoServiceImpl implements FileInfoService {
 
     private final GetMime mime;
+    private final Javers javers;
     private final FileInfoRepository fileInfoRepository;
     private final FileContentRepository fileContentRepository;
+
+    private final FileInfoAuditRepo fileInfoAuditRepo;
+    private final FileContentAuditRepo fileContentAuditRepo;
     private final FileInfoToResponseMapper fileInfoToResponseMapper;
 
-    @Override
+   /*
+        # Heartfelt condolence to reactive save.
+
+   @Override
     public void saveFileInfo(FilePart filePart) throws IOException{
 
         log.info("FileInfoServiceImpl | saving fileContent ");
@@ -45,6 +59,23 @@ public class FileInfoServiceImpl implements FileInfoService {
                     fileInfo.setFileContentId(savedFileContent.getId());
                     return fileInfoRepository.save(fileInfo);
                 }).subscribe();
+    }*/
+
+    @Override
+    @Transactional
+    public void saveFileInfo(FilePart filePart) throws IOException {
+
+        FileContent fileContent = new FileContent();
+        fileContent.setActualData(mime.getMime(filePart));
+        fileContent.setFileName(filePart.filename());
+        FileContent savedContent = fileContentAuditRepo.save(fileContent);
+
+        String id = savedContent.getId();
+
+        FileInfo fileInfo = getFileInfo(filePart);
+        fileInfo.setFileContentId(id);
+
+        fileInfoAuditRepo.save(fileInfo);
     }
 
     @NotNull
@@ -59,6 +90,8 @@ public class FileInfoServiceImpl implements FileInfoService {
         return fileInfo;
     }
 
+    /*
+        Rest in peace
     @Override
     public void updateFileInfo(FilePart filePart, String id) throws IOException{
 
@@ -77,6 +110,23 @@ public class FileInfoServiceImpl implements FileInfoService {
                             fileContent.setActualData(actualContent);
                             return fileContentRepository.save(fileContent);
                         })).subscribe();
+    }*/
+
+    public void updateFileInfo(FilePart filePart, String id) throws IOException {
+
+        String actualContent = mime.getMime(filePart);
+
+        FileContent fileContent = fileContentAuditRepo.findById(id).orElseThrow(() -> new RuntimeException("not found"));
+        fileContent.setActualData(actualContent);
+
+        fileContentAuditRepo.save(fileContent);
+
+        FileInfo byFileContentId = fileInfoAuditRepo.findByFileContentId(id);
+        byFileContentId.setPath("dummy2");
+        byFileContentId.setSize(filePart.headers().size());
+        byFileContentId.setCreatedBy("don2");
+        fileInfoAuditRepo.save(byFileContentId);
+
     }
 
     @Override
@@ -107,6 +157,37 @@ public class FileInfoServiceImpl implements FileInfoService {
                     });
                 })
                 .map(fileInfoToResponseMapper);
+    }
+
+    @Override
+    public FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion) {
+
+        QueryBuilder jqlQuery = QueryBuilder.byInstanceId(fileContentId, FileContent.class).withVersion(snapshotVersion);
+        AtomicReference<FileContent> fileContent = new AtomicReference<>(new FileContent());
+        javers.findSnapshots(jqlQuery.build()).forEach(snapshot -> {
+            CdoSnapshotState cdoSnapshotState = snapshot.getState();
+            String json = javers.getJsonConverter().toJson(cdoSnapshotState);
+
+            fileContent.set(javers.getJsonConverter().fromJson(json, FileContent.class));
+
+        });
+        fileContentAuditRepo.save(fileContent.get());
+
+        QueryBuilder jqlQuery2 = QueryBuilder.byInstanceId(fileInfoId, FileInfo.class).withVersion(snapshotVersion);
+        AtomicReference<FileInfo> fileInfo = new AtomicReference<>(new FileInfo());
+
+        javers.findSnapshots(jqlQuery2.build()).forEach(snapshot -> {
+            CdoSnapshotState cdoSnapshotState = snapshot.getState();
+            String json = javers.getJsonConverter().toJson(cdoSnapshotState);
+
+            fileInfo.set(javers.getJsonConverter().fromJson(json, FileInfo.class));
+
+        });
+
+        fileInfoAuditRepo.save(fileInfo.get());
+
+        return fileInfoAuditRepo.findById(fileInfoId).map(fileInfoToResponseMapper).orElseThrow(() -> new RuntimeException("id not found"));
+
     }
 
     @Override

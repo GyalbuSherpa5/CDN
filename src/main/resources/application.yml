@@ -9,12 +9,20 @@ spring:
       max-request-size: 20MB
   data:
     mongodb:
-      uri: mongodb+srv://prod:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
+      uri: mongodb+srv://iamdon123:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
       database: don
       auto-index-creation: false
 #      host : localhost
 #      database: don
 #      port: 27017
+
+  javers:
+    documentDbCompatibilityEnabled: false
+    objectAccessHook: org.javers.spring.mongodb.DBRefUnproxyObjectAccessHook
+    snapshotsCacheSize: 5000
+    snapshotCollectionName: "Audit_table"
+    headCollectionName: "Audit_id"
+    schemaManagementEnabled: true
 
 minio:
   endpoint: http://127.0.0.1:9000
