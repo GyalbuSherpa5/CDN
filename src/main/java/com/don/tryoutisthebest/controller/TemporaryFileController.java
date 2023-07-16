@@ -1,0 +1,44 @@
+package com.don.tryoutisthebest.controller;
+
+import com.don.tryoutisthebest.model.TemporaryFile;
+import com.don.tryoutisthebest.service.TemporaryFileService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("files")
+public class TemporaryFileController {
+
+    private final TemporaryFileService fileService;
+
+    @PostMapping("/request")
+    public Mono<String> uploadTemporaryFile(FilePart filePart, @RequestPart TemporaryFile file) throws IOException {
+
+        fileService.saveTemporaryInfo(filePart,file);
+
+        return Mono.just("ih");
+    }
+
+    @GetMapping("/getRequest/{userName}")
+    public Mono<TemporaryFile> getAllRequestedFile(@PathVariable String userName){
+
+        return fileService.getAllRequests(userName);
+    }
+
+    @PostMapping("/approve/{approvedByWhoUser}/{fileName}/{yesKiNo}")
+    public Mono<String> approve(@PathVariable String approvedByWhoUser, @PathVariable String fileName, @PathVariable boolean yesKiNo){
+
+        fileService.giveApproval(approvedByWhoUser,fileName,yesKiNo);
+
+        return Mono.just("approve vayo dai");
+    }
+
+
+}
