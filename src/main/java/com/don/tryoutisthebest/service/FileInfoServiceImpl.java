@@ -1,31 +1,30 @@
 package com.don.tryoutisthebest.service;
 
-import com.don.tryoutisthebest.repository.FileContentAuditRepo;
-import com.don.tryoutisthebest.repository.FileInfoAuditRepo;
-import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.enums.FileInfoStatus;
 import com.don.tryoutisthebest.model.FileContent;
 import com.don.tryoutisthebest.model.FileInfo;
+import com.don.tryoutisthebest.repository.FileContentAuditRepo;
 import com.don.tryoutisthebest.repository.FileContentRepository;
+import com.don.tryoutisthebest.repository.FileInfoAuditRepo;
 import com.don.tryoutisthebest.repository.FileInfoRepository;
+import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.mapper.FileInfoToResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javers.core.Javers;
 import org.javers.core.metamodel.object.CdoSnapshot;
-import org.javers.core.metamodel.object.CdoSnapshotState;
 import org.javers.repository.jql.QueryBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -70,6 +69,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         FileContent fileContent = new FileContent();
         fileContent.setActualData(mime.getMime(filePart));
         fileContent.setFileName(filePart.filename());
+        fileContent.setFileStatus(FileInfoStatus.ACTIVE);
         FileContent savedContent = fileContentAuditRepo.save(fileContent);
 
         String id = savedContent.getId();
@@ -208,6 +208,18 @@ public class FileInfoServiceImpl implements FileInfoService {
         return fileInfoAuditRepo.findById(fileInfoId)
                 .map(fileInfoToResponseMapper)
                 .orElseThrow(() -> new RuntimeException("id not found"));
+    }
+
+    @Override
+    public Mono<Void> deleteByFileName(String fileName) {
+        // Assume fileInfoRepository.findByName returns a Mono<FileInfo>
+        return fileInfoRepository.findByName(fileName)
+                .flatMap(fileInfo -> {
+                    fileInfo.setStatus(FileInfoStatus.DELETED);
+                    // Assume fileInfoRepository.save returns a Mono<FileInfo>
+                    return fileInfoRepository.save(fileInfo);
+                })
+                .then();
     }
 
     private FileContent rollbackFileContentToSnapshot(String fileContentId, int snapshotVersion) {

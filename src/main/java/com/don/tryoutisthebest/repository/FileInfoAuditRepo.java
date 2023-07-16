@@ -7,4 +7,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 @JaversSpringDataAuditable
 public interface FileInfoAuditRepo extends MongoRepository<FileInfo, String> {
     FileInfo findByFileContentId(String id);
+
 }

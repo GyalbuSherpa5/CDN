@@ -5,7 +5,6 @@ import com.don.tryoutisthebest.service.FileInfoService;
 import com.don.tryoutisthebest.service.FileService;
 import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.minio.MinioUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.exception.TikaException;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -82,6 +80,11 @@ public class FileController {
 
         return fileInfoService.rollbackToSnapshot(fileContentId, fileInfoId, snapshotVersion);
 
+    }
+
+    @PostMapping("/deleteByFileName/{fileName}")
+    public Mono<String> deleteByName(@PathVariable String fileName){
+        return fileInfoService.deleteByFileName(fileName).thenReturn("deleted");
     }
 
 }

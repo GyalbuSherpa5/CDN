@@ -1,5 +1,6 @@
 package com.don.tryoutisthebest.model;
 
+import com.don.tryoutisthebest.enums.FileInfoStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,8 @@ public class FileContent {
     private String fileName;
 
     private String actualData;
+
+    private FileInfoStatus fileStatus;
 
 }
 

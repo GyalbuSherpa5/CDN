@@ -17,6 +17,9 @@ public interface FileInfoService {
     Flux<FileResponse> getAll();
     FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion);
 
+    Mono<Void> deleteByFileName(String fileName);
+
+
     /*Mono<List<FileResponse>> getFileContentChanges(String id);
 
     Mono<List<FileResponse>> getFileContentChanges();
