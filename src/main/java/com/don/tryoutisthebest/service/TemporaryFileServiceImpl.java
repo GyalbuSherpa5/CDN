@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 
 @Service
@@ -41,20 +40,19 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
 
         repository.findByFileName(fileName)
                 .flatMap(temporaryFile -> {
-                    if(yesKiNo){
-                        if(temporaryFile.getCount() != 0) {
+                    if (yesKiNo) {
+                        if (temporaryFile.getCount() != 0) {
                             temporaryFile.setApprovedBy(Collections.singletonList(approvedByWhoUser));
                             temporaryFile.setCount(temporaryFile.getCount() - 1);
                         }
-                    }
-                    else {
+                    } else {
                         temporaryFile.setRejectedBy(Collections.singletonList(approvedByWhoUser));
                         temporaryFile.setStatus(RequestedFileStatus.REJECTED);
                     }
                     return repository.save(temporaryFile);
                 })
                 .flatMap(temporaryFile -> {
-                    if(temporaryFile.getCount() ==0 ){
+                    if (temporaryFile.getCount() == 0) {
                         temporaryFile.setStatus(RequestedFileStatus.APPROVED);
                         temporaryFile.setActualContent("don");
                     }

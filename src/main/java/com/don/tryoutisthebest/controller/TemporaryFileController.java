@@ -21,21 +21,21 @@ public class TemporaryFileController {
     @PostMapping("/request")
     public Mono<String> uploadTemporaryFile(FilePart filePart, @RequestPart TemporaryFile file) throws IOException {
 
-        fileService.saveTemporaryInfo(filePart,file);
+        fileService.saveTemporaryInfo(filePart, file);
 
         return Mono.just("ih");
     }
 
     @GetMapping("/getRequest/{userName}")
-    public Mono<TemporaryFile> getAllRequestedFile(@PathVariable String userName){
+    public Mono<TemporaryFile> getAllRequestedFile(@PathVariable String userName) {
 
         return fileService.getAllRequests(userName);
     }
 
     @PostMapping("/approve/{approvedByWhoUser}/{fileName}/{yesKiNo}")
-    public Mono<String> approve(@PathVariable String approvedByWhoUser, @PathVariable String fileName, @PathVariable boolean yesKiNo){
+    public Mono<String> approve(@PathVariable String approvedByWhoUser, @PathVariable String fileName, @PathVariable boolean yesKiNo) {
 
-        fileService.giveApproval(approvedByWhoUser,fileName,yesKiNo);
+        fileService.giveApproval(approvedByWhoUser, fileName, yesKiNo);
 
         return Mono.just("approve vayo dai");
     }
