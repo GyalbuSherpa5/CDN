@@ -9,26 +9,26 @@ spring:
       max-request-size: 20MB
   data:
     mongodb:
-      uri: mongodb+srv://iamdon123:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
+      uri: mongodb://adminUser:adminPassword@localhost/cms_db?authSource=admin
       database: don
       auto-index-creation: false
 #      host : localhost
 #      database: don
 #      port: 27017
 
-  javers:
+javers:
     documentDbCompatibilityEnabled: false
     objectAccessHook: org.javers.spring.mongodb.DBRefUnproxyObjectAccessHook
     snapshotsCacheSize: 5000
     snapshotCollectionName: "Audit_table"
-    headCollectionName: "Audit_id"
+    headCollectionName: "commit_id"
     schemaManagementEnabled: true
 
 minio:
   endpoint: http://127.0.0.1:9000
   port: 9000
-  accessKey: iamdon123 #Login Account
-  secretKey: iamdon123 # Login Password
+  accessKey: minioadmin #Login Account
+  secretKey: minioadmin # Login Password
   secure: false
   bucket-name: testbucket # Bucket Name
   image-size: 20971520 #  Maximum size of picture file

@@ -1,0 +1,6 @@
+Hypthosesis Representation
+Cost Function
+Logistic Regression With Gradient Descent
+
+
+This is test ok i am don 1
