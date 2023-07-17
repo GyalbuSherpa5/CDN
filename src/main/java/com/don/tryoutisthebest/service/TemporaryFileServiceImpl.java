@@ -4,19 +4,21 @@ import com.don.tryoutisthebest.enums.RequestedFileStatus;
 import com.don.tryoutisthebest.exception.FileProcessingException;
 import com.don.tryoutisthebest.model.TemporaryFile;
 import com.don.tryoutisthebest.repository.TemporaryFileRepository;
+import com.don.tryoutisthebest.resources.CheckerResponseDto;
+import com.don.tryoutisthebest.resources.MakerResponseDto;
 import com.don.tryoutisthebest.resources.UploadRequestDto;
 import com.don.tryoutisthebest.util.files.GetMime;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-
+import com.don.tryoutisthebest.util.mapper.CheckerResponseMapper;
+import com.don.tryoutisthebest.util.mapper.MakerResponseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.util.Collections;
 
 
 @Service
@@ -26,6 +28,8 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
 
     private final TemporaryFileRepository repository;
     private final GetMime mime;
+    private final CheckerResponseMapper checkerResponseMapper;
+    private final MakerResponseMapper makerResponseMapper;
 
     @Override
     public Mono<String> saveTemporaryInfo(FilePart filePart, UploadRequestDto file) throws IOException {
@@ -45,8 +49,10 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
     }
 
     @Override
-    public Mono<TemporaryFile> getAllRequests(String userName) {
-        return repository.findByStatusAndRequestedToIsContaining(RequestedFileStatus.REQUESTED, userName);
+    public Flux<CheckerResponseDto> getAllRequests(String userName) {
+        return repository.
+                findByStatusAndRequestedToIsContaining(RequestedFileStatus.REQUESTED, userName)
+                .map(checkerResponseMapper);
     }
 
     @Override
@@ -73,6 +79,17 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
                     return repository.save(temporaryFile);
                 })
                 .subscribe();
+    }
+
+    @Override
+    public Mono<Void> deleteAllFileTemp() {
+        return repository.deleteAll();
+    }
+
+    @Override
+    public Flux<MakerResponseDto> getMyRequest(String userName) {
+        return repository.findByCreatedBy(userName)
+                .map(makerResponseMapper);
     }
 
 }

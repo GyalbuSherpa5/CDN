@@ -1,12 +1,15 @@
 package com.don.tryoutisthebest.controller;
 
 import com.don.tryoutisthebest.model.TemporaryFile;
+import com.don.tryoutisthebest.resources.CheckerResponseDto;
+import com.don.tryoutisthebest.resources.MakerResponseDto;
 import com.don.tryoutisthebest.resources.UploadRequestDto;
 import com.don.tryoutisthebest.service.TemporaryFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -24,11 +27,13 @@ public class TemporaryFileController {
         return fileService.saveTemporaryInfo(filePart,file);
     }
 
-
     @GetMapping("/getRequest/{userName}")
-    public Mono<TemporaryFile> getAllRequestedFile(@PathVariable String userName) {
-
+    public Flux<CheckerResponseDto> getAllRequestedFileForChecker(@PathVariable String userName) {
         return fileService.getAllRequests(userName);
+    }
+    @GetMapping("/getMyRequest/{userName}")
+    public Flux<MakerResponseDto> getMyRequests(@PathVariable String userName){
+        return fileService.getMyRequest(userName);
     }
 
     @PostMapping("/approve/{approvedByWhoUser}/{fileName}/{yesKiNo}")
@@ -37,6 +42,11 @@ public class TemporaryFileController {
         fileService.giveApproval(approvedByWhoUser, fileName, yesKiNo);
 
         return Mono.just("approve vayo dai");
+    }
+
+    @DeleteMapping("/deleteAllTemp")
+    public Mono<Void> deleteAll() {
+        return fileService.deleteAllFileTemp();
     }
 
 
