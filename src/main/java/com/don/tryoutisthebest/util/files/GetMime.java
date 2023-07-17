@@ -19,13 +19,22 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class GetMime {
-    public String getMime(FilePart filePart) throws IOException {
-        File convFile = new File(filePart.filename());
-        filePart.transferTo(convFile).subscribe();
-        return Files.readString(convFile.toPath());
+
+    public String getMime(FilePart filePart) {
+        AtomicReference<String> actualContent = new AtomicReference<>("");
+
+        filePart.content().map(dataBuffer -> {
+            byte[] contentBytes = new byte[dataBuffer.readableByteCount()];
+            dataBuffer.read(contentBytes);
+            actualContent.set(new String(contentBytes, StandardCharsets.UTF_8));
+            return new String(contentBytes, StandardCharsets.UTF_8);
+        }).subscribe();
+
+        return actualContent.get();
     }
 
     public File convertStringToFile(String content, String filename) throws IOException {
@@ -77,6 +86,7 @@ public class GetMime {
             }
         };
     }
+
     public MediaType getContentTypeFromFileName(String filename) {
         Path path = Paths.get(filename);
         String contentTypeString = URLConnection.guessContentTypeFromName(path.toString());

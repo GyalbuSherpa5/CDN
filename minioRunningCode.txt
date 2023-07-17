@@ -1,3 +1,0 @@
-$env:MINIO_ROOT_USER="user"
-$env:MINIO_ROOT_PASSWORD="Basketball"
-.\minio.exe server D:\minio --console-address :9090
