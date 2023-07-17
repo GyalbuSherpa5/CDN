@@ -1,5 +1,6 @@
 package com.don.tryoutisthebest.controller;
 
+import com.don.tryoutisthebest.model.FileInfo;
 import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.service.FileInfoService;
 import com.don.tryoutisthebest.service.FileService;
@@ -14,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -79,6 +81,30 @@ public class FileController {
     @PostMapping("/deleteByFileName/{fileName}")
     public Mono<String> deleteByName(@PathVariable String fileName) {
         return fileInfoService.deleteByFileName(fileName).thenReturn("deleted");
+    }
+
+    @GetMapping("/changes")
+    public Mono<List<FileInfo>> getFileContentChanges() {
+
+        return fileInfoService.getFileContentChanges();
+    }
+
+    @GetMapping("/changes/{id}")
+    public Mono<List<FileInfo>> getFileContentChanges(@PathVariable String id) {
+
+        return fileInfoService.getFileContentChanges(id);
+    }
+
+    @GetMapping("/fileInfo/states")
+    public Mono<Object> getFileContentAuditStates() {
+
+        return fileInfoService.getFileContentAuditStates();
+    }
+
+    @GetMapping("/fileInfo/{id}/states")
+    public Mono<Object> getFileContentAuditStates(@PathVariable String id) {
+
+        return fileInfoService.getFileContentAuditStates(id);
     }
 
 }
