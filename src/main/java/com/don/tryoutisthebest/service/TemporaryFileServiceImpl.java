@@ -62,12 +62,13 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
     public void giveApproval(String approvedByWhoUser, String fileName, boolean yesKiNo) {
         repository.findByFileName(fileName)
                 .flatMap(temporaryFile -> {
+                    temporaryFile.setCount(temporaryFile.getRequestedTo().size());
                     if (yesKiNo && temporaryFile.getCount() != 0) {
                         // Check if the approvedByWhoUser is not already present in the approvedBy list
                         if (!temporaryFile.getApprovedBy().contains(approvedByWhoUser)) {
                             temporaryFile.getApprovedBy().add(approvedByWhoUser);
                         }
-                        temporaryFile.setCount(temporaryFile.getCount() - 1);
+                        temporaryFile.setApprovedCount(temporaryFile.getApprovedCount() + 1);
                     } else {
                         if (!temporaryFile.getRejectedBy().contains(approvedByWhoUser)) {
                             temporaryFile.getRejectedBy().add(approvedByWhoUser);
@@ -77,7 +78,7 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
                     return repository.save(temporaryFile);
                 })
                 .flatMap(temporaryFile -> {
-                    if (temporaryFile.getCount() == 0) {
+                    if (temporaryFile.getCount() == temporaryFile.getApprovedCount()) {
                         temporaryFile.setStatus(RequestedFileStatus.APPROVED);
 
                         FilePart filePart = mime.createFilePart(fileName, temporaryFile.getActualContent());

@@ -30,6 +30,7 @@ public class TemporaryFile {
     private String createdBy;
     private RequestedFileStatus status;
     private int count;
+    private int approvedCount;
 
     @CreatedDate
     private Date createdDate;
