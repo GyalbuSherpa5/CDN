@@ -8,10 +8,13 @@ import com.don.tryoutisthebest.repository.FileInfoRepository;
 import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.mapper.FileInfoToResponseMapper;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.javers.core.Javers;
 import org.javers.core.metamodel.object.CdoSnapshot;
+import org.javers.core.metamodel.object.CdoSnapshotState;
 import org.javers.repository.jql.QueryBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.multipart.FilePart;
@@ -20,7 +23,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -177,6 +184,81 @@ public class FileInfoServiceImpl implements FileInfoService {
 
         return snapshot.map(s -> javers.getJsonConverter().fromJson(javers.getJsonConverter().toJson(s.getState()), FileInfo.class))
                 .orElse(new FileInfo());
+    }
+
+    @Override
+    public Mono<List<FileInfo>> getFileContentChanges(String id) {
+
+        QueryBuilder jqlQuery = QueryBuilder.byInstanceId(id, FileInfo.class);
+        List<CdoSnapshot> snapshots = javers.findSnapshots(jqlQuery.build());
+
+        List<CdoSnapshotState> snapshotStates = snapshots.stream()
+                .map(CdoSnapshot::getState)
+                .collect(Collectors.toList());
+        String changesJson = javers.getJsonConverter().toJson(snapshotStates);
+        Gson gson = new Gson();
+        AtomicReference<ArrayList<FileInfo>> fileInfoList = new AtomicReference<>(new ArrayList<>());
+        fileInfoList.set(gson.fromJson(changesJson, new TypeToken<ArrayList<FileInfo>>() {
+        }.getType()));
+
+        return Mono.just(fileInfoList.get());
+
+    }
+
+
+    @Override
+    public Mono<List<FileInfo>> getFileContentChanges() {
+        QueryBuilder jqlQuery = QueryBuilder.byClass(FileInfo.class);
+        List<CdoSnapshot> snapshots = javers.findSnapshots(jqlQuery.build());
+
+        List<CdoSnapshotState> snapshotStates = snapshots.stream()
+                .map(CdoSnapshot::getState)
+                .collect(Collectors.toList());
+        String changesJson = javers.getJsonConverter().toJson(snapshotStates);
+        Gson gson = new Gson();
+        AtomicReference<ArrayList<FileInfo>> fileInfoList = new AtomicReference<>(new ArrayList<>());
+        fileInfoList.set(gson.fromJson(changesJson, new TypeToken<ArrayList<FileInfo>>() {
+        }.getType()));
+
+        return Mono.just(fileInfoList.get());
+    }
+
+
+    @Override
+    public Mono<Object> getFileContentAuditStates() {
+        QueryBuilder jqlQuery = QueryBuilder.byClass(FileInfo.class);
+
+        List<CdoSnapshot> changes = new ArrayList<>(javers.findSnapshots(jqlQuery.build()));
+
+        changes.sort((o1, o2) -> -1 * o1.getCommitMetadata().getCommitDate().compareTo(o2.getCommitMetadata().getCommitDate()));
+        String changesJson = javers.getJsonConverter().toJson(changes);
+        Gson gson = new Gson();
+
+        AtomicReference<ArrayList<Object>> fileContentAuditList = new AtomicReference<>(new ArrayList<>());
+        fileContentAuditList.set(gson.fromJson(changesJson, new TypeToken<ArrayList<Object>>() {
+        }.getType()));
+
+        return Mono.just(fileContentAuditList.get());
+    }
+
+    @Override
+    public Mono<Object> getFileContentAuditStates(String id) {
+
+        QueryBuilder jqlQuery = QueryBuilder.byInstanceId(id, FileInfo.class);
+
+        List<CdoSnapshot> changes = javers.findSnapshots(jqlQuery.build());
+
+        changes.sort((o1, o2) -> -1 * o1.getCommitMetadata().getCommitDate().compareTo(o2.getCommitMetadata().getCommitDate()));
+
+        String changesJson = javers.getJsonConverter().toJson(changes);
+        Gson gson = new Gson();
+
+        AtomicReference<ArrayList<Object>> fileContentAuditList = new AtomicReference<>(new ArrayList<>());
+        fileContentAuditList.set(gson.fromJson(changesJson, new TypeToken<ArrayList<Object>>() {
+        }.getType()));
+
+        return Mono.just(fileContentAuditList.get());
+
     }
 
     @Override
