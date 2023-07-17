@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -24,14 +25,13 @@ public class TemporaryFile {
     private String fileName;
     private String actualContent;
     private List<String> requestedTo;
-    private List<String> approvedBy;
-    private List<String> rejectedBy;
+    private List<String> approvedBy = new ArrayList<>();
+    private List<String> rejectedBy = new ArrayList<>();
     private String createdBy;
     private RequestedFileStatus status;
     private int count;
 
     @CreatedDate
     private Date createdDate;
-
 
 }

@@ -47,7 +47,7 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
         return repository.findByFileName(filePart.filename())
                 .flatMap(temporaryFile -> Mono.error(new FileProcessingException("File Name already exist")))
                 .switchIfEmpty(Mono.defer(() ->
-                          repository.save(files)
+                        repository.save(files)
                 )).thenReturn("Saved successfully");
     }
 
@@ -60,16 +60,18 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
 
     @Override
     public void giveApproval(String approvedByWhoUser, String fileName, boolean yesKiNo) {
-
         repository.findByFileName(fileName)
                 .flatMap(temporaryFile -> {
-                    if (yesKiNo) {
-                        if (temporaryFile.getCount() != 0) {
-                            temporaryFile.setApprovedBy(Collections.singletonList(approvedByWhoUser));
-                            temporaryFile.setCount(temporaryFile.getCount() - 1);
+                    if (yesKiNo && temporaryFile.getCount() != 0) {
+                        // Check if the approvedByWhoUser is not already present in the approvedBy list
+                        if (!temporaryFile.getApprovedBy().contains(approvedByWhoUser)) {
+                            temporaryFile.getApprovedBy().add(approvedByWhoUser);
                         }
+                        temporaryFile.setCount(temporaryFile.getCount() - 1);
                     } else {
-                        temporaryFile.setRejectedBy(Collections.singletonList(approvedByWhoUser));
+                        if (!temporaryFile.getRejectedBy().contains(approvedByWhoUser)) {
+                            temporaryFile.getRejectedBy().add(approvedByWhoUser);
+                        }
                         temporaryFile.setStatus(RequestedFileStatus.REJECTED);
                     }
                     return repository.save(temporaryFile);
