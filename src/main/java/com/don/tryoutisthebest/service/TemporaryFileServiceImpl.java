@@ -1,17 +1,23 @@
 package com.don.tryoutisthebest.service;
 
 import com.don.tryoutisthebest.enums.RequestedFileStatus;
+import com.don.tryoutisthebest.exception.FileProcessingException;
 import com.don.tryoutisthebest.model.TemporaryFile;
 import com.don.tryoutisthebest.repository.TemporaryFileRepository;
+import com.don.tryoutisthebest.resources.UploadRequestDto;
 import com.don.tryoutisthebest.util.files.GetMime;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -22,12 +28,20 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
     private final GetMime mime;
 
     @Override
-    public void saveTemporaryInfo(FilePart filePart, TemporaryFile file) throws IOException {
-        file.setFileName(filePart.filename());
-        file.setActualContent(mime.getMime(filePart));
-        file.setStatus(RequestedFileStatus.REQUESTED);
+    public Mono<String> saveTemporaryInfo(FilePart filePart, UploadRequestDto file) throws IOException {
+        TemporaryFile files = new TemporaryFile();
+        files.setFileName(filePart.filename());
+        files.setActualContent(mime.getMime(filePart));
+        files.setRequestedTo(file.getRequestedTo());
+        files.setCreatedBy(file.getCreatedBy());
+        files.setStatus(RequestedFileStatus.REQUESTED);
+        files.setCount(file.getCount());
 
-        repository.save(file).subscribe();
+        return repository.findByFileName(filePart.filename())
+                .flatMap(temporaryFile -> Mono.error(new FileProcessingException("File Name already exist")))
+                .switchIfEmpty(Mono.defer(() ->
+                          repository.save(files)
+                )).thenReturn("Saved successfully");
     }
 
     @Override

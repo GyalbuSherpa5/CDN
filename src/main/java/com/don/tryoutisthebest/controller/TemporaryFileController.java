@@ -1,6 +1,7 @@
 package com.don.tryoutisthebest.controller;
 
 import com.don.tryoutisthebest.model.TemporaryFile;
+import com.don.tryoutisthebest.resources.UploadRequestDto;
 import com.don.tryoutisthebest.service.TemporaryFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +20,10 @@ public class TemporaryFileController {
     private final TemporaryFileService fileService;
 
     @PostMapping("/request")
-    public Mono<String> uploadTemporaryFile(FilePart filePart, @RequestPart TemporaryFile file) throws IOException {
-
-        fileService.saveTemporaryInfo(filePart, file);
-
-        return Mono.just("ih");
+    public Mono<String> uploadTemporaryFile(FilePart filePart, @RequestPart UploadRequestDto file) throws IOException {
+        return fileService.saveTemporaryInfo(filePart,file);
     }
+
 
     @GetMapping("/getRequest/{userName}")
     public Mono<TemporaryFile> getAllRequestedFile(@PathVariable String userName) {
