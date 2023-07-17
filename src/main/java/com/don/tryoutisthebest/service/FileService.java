@@ -9,5 +9,5 @@ import java.io.IOException;
 public interface FileService {
     String uploadFile(FilePart filePart) throws TikaException, IOException;
 
-    Mono<String> updateFile(FilePart filePart, String id) throws TikaException, IOException;
+    Mono<String> updateFile(FilePart filePart) throws TikaException, IOException;
 }

@@ -6,19 +6,21 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface FileInfoService {
     String saveFileInfo(FilePart filePart) throws IOException;
-    void updateFileInfo(FilePart filePart, String id) throws IOException;
+
+    void updateFileInfo(FilePart filePart) throws IOException;
+
     Mono<FileResponse> getFileDetail(String id);
+
     Mono<Void> deleteAllFileInfo();
-    Mono<Void> deleteAllFileContent();
+
     Flux<FileResponse> getAll();
-    FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion);
+
+    FileResponse rollbackToSnapshot(String fileInfoId, int snapshotVersion);
 
     Mono<Void> deleteByFileName(String fileName);
-
 
     /*Mono<List<FileResponse>> getFileContentChanges(String id);
 

@@ -1,10 +1,8 @@
 package com.don.tryoutisthebest.service;
 
 import com.don.tryoutisthebest.enums.FileInfoStatus;
-import com.don.tryoutisthebest.model.FileContent;
+import com.don.tryoutisthebest.exception.FileProcessingException;
 import com.don.tryoutisthebest.model.FileInfo;
-import com.don.tryoutisthebest.repository.FileContentAuditRepo;
-import com.don.tryoutisthebest.repository.FileContentRepository;
 import com.don.tryoutisthebest.repository.FileInfoAuditRepo;
 import com.don.tryoutisthebest.repository.FileInfoRepository;
 import com.don.tryoutisthebest.resources.FileResponse;
@@ -18,8 +16,6 @@ import org.javers.repository.jql.QueryBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,10 +30,8 @@ public class FileInfoServiceImpl implements FileInfoService {
     private final GetMime mime;
     private final Javers javers;
     private final FileInfoRepository fileInfoRepository;
-    private final FileContentRepository fileContentRepository;
 
     private final FileInfoAuditRepo fileInfoAuditRepo;
-    private final FileContentAuditRepo fileContentAuditRepo;
     private final FileInfoToResponseMapper fileInfoToResponseMapper;
 
    /*
@@ -63,33 +57,22 @@ public class FileInfoServiceImpl implements FileInfoService {
     }*/
 
     @Override
-    @Transactional
-    public String saveFileInfo(FilePart filePart) throws IOException {
+    public String saveFileInfo(FilePart filePart) {
 
-        FileContent fileContent = new FileContent();
-        fileContent.setActualData(mime.getMime(filePart));
-        fileContent.setFileName(filePart.filename());
-        fileContent.setFileStatus(FileInfoStatus.ACTIVE);
-        FileContent savedContent = fileContentAuditRepo.save(fileContent);
-
-        String id = savedContent.getId();
-
-        FileInfo fileInfo = getFileInfo(filePart);
-        fileInfo.setFileContentId(id);
-
-        fileInfoAuditRepo.save(fileInfo);
+        fileInfoAuditRepo.save(getFileInfo(filePart));
         return "uploaded";
     }
 
     @NotNull
-    private static FileInfo getFileInfo(FilePart filePart) {
+    private FileInfo getFileInfo(FilePart filePart) {
         FileInfo fileInfo = new FileInfo();
-        fileInfo.setName(filePart.filename());
-        fileInfo.setPath("dummy");
-        fileInfo.setSize(filePart.headers().size());
-        fileInfo.setCreatedBy("don");
-        fileInfo.setStatus(FileInfoStatus.ACTIVE);
+        fileInfo.setFileName(filePart.filename());
+        fileInfo.setFilePath("dummy path");
+        fileInfo.setFileSize(filePart.headers().size());
         fileInfo.setContentType(String.valueOf(filePart.headers().getContentType()));
+        fileInfo.setCreatedBy("session bata comes");
+        fileInfo.setFileStatus(FileInfoStatus.ACTIVE);
+        fileInfo.setActualData(mime.getMime(filePart));
         return fileInfo;
     }
 
@@ -115,35 +98,22 @@ public class FileInfoServiceImpl implements FileInfoService {
                         })).subscribe();
     }*/
 
-    public void updateFileInfo(FilePart filePart, String id) throws IOException {
+    public void updateFileInfo(FilePart filePart) throws IOException {
 
         String actualContent = mime.getMime(filePart);
 
-        FileContent fileContent = fileContentAuditRepo.findById(id).orElseThrow(() -> new RuntimeException("not found"));
-        fileContent.setActualData(actualContent);
+        FileInfo fileInfo = fileInfoAuditRepo.findByFileName(filePart.filename())
+                .orElseThrow(() -> new FileProcessingException("file not found"));
+        fileInfo.setActualData(actualContent);
+        fileInfo.setFileSize(filePart.headers().size());
 
-        fileContentAuditRepo.save(fileContent);
-
-        FileInfo byFileContentId = fileInfoAuditRepo.findByFileContentId(id);
-        byFileContentId.setPath("dummy2");
-        byFileContentId.setSize(filePart.headers().size());
-        byFileContentId.setCreatedBy("don2");
-        fileInfoAuditRepo.save(byFileContentId);
-
+        fileInfoAuditRepo.save(fileInfo);
     }
 
     @Override
     public Mono<FileResponse> getFileDetail(String id) {
         log.info("FileInfoServiceImpl | inside getFileDetail ");
         return fileInfoRepository.findById(id)
-                .flatMap(fileInfo -> {
-                    Mono<FileContent> fileContentMono = fileContentRepository
-                            .findById(fileInfo.getFileContentId());
-                    return fileContentMono.map(fileContent -> {
-                        fileInfo.setFileContent(fileContent);
-                        return fileInfo;
-                    });
-                })
                 .map(fileInfoToResponseMapper);
     }
 
@@ -151,21 +121,12 @@ public class FileInfoServiceImpl implements FileInfoService {
     public Flux<FileResponse> getAll() {
         log.info("FileInfoServiceImpl | inside getAll ");
         return fileInfoRepository.findAll()
-                .flatMap(fileInfo -> {
-                    Mono<FileContent> fileContentMono = fileContentRepository
-                            .findById(fileInfo.getFileContentId());
-                    return fileContentMono.map(fileContent -> {
-                        fileInfo.setFileContent(fileContent);
-                        return fileInfo;
-                    });
-                })
                 .map(fileInfoToResponseMapper);
     }
 
     /*
 
     we'll see you later hai bro
-
     @Override
     public FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion) {
 
@@ -199,11 +160,9 @@ public class FileInfoServiceImpl implements FileInfoService {
 */
 
     @Override
-    public FileResponse rollbackToSnapshot(String fileContentId, String fileInfoId, int snapshotVersion) {
-        FileContent fileContent = rollbackFileContentToSnapshot(fileContentId, snapshotVersion);
+    public FileResponse rollbackToSnapshot(String fileInfoId, int snapshotVersion) {
         FileInfo fileInfo = rollbackFileInfoToSnapshot(fileInfoId, snapshotVersion);
 
-        fileContentAuditRepo.save(fileContent);
         fileInfoAuditRepo.save(fileInfo);
 
         return fileInfoAuditRepo.findById(fileInfoId)
@@ -211,25 +170,6 @@ public class FileInfoServiceImpl implements FileInfoService {
                 .orElseThrow(() -> new RuntimeException("id not found"));
     }
 
-    @Override
-    public Mono<Void> deleteByFileName(String fileName) {
-        // Assume fileInfoRepository.findByName returns a Mono<FileInfo>
-        return fileInfoRepository.findByName(fileName)
-                .flatMap(fileInfo -> {
-                    fileInfo.setStatus(FileInfoStatus.DELETED);
-                    // Assume fileInfoRepository.save returns a Mono<FileInfo>
-                    return fileInfoRepository.save(fileInfo);
-                })
-                .then();
-    }
-
-    private FileContent rollbackFileContentToSnapshot(String fileContentId, int snapshotVersion) {
-        QueryBuilder jqlQuery = QueryBuilder.byInstanceId(fileContentId, FileContent.class).withVersion(snapshotVersion);
-        Optional<CdoSnapshot> snapshot = javers.findSnapshots(jqlQuery.build()).stream().findFirst();
-
-        return snapshot.map(s -> javers.getJsonConverter().fromJson(javers.getJsonConverter().toJson(s.getState()), FileContent.class))
-                .orElse(new FileContent());
-    }
 
     private FileInfo rollbackFileInfoToSnapshot(String fileInfoId, int snapshotVersion) {
         QueryBuilder jqlQuery = QueryBuilder.byInstanceId(fileInfoId, FileInfo.class).withVersion(snapshotVersion);
@@ -246,10 +186,15 @@ public class FileInfoServiceImpl implements FileInfoService {
     }
 
     @Override
-    public Mono<Void> deleteAllFileContent() {
-        log.info("FileInfoServiceImpl | inside deleteAllFileContent ");
-        return fileContentRepository.deleteAll();
+    public Mono<Void> deleteByFileName(String fileName) {
+        // Assume fileInfoRepository.findByName returns a Mono<FileInfo>
+        return fileInfoRepository.findByFileName(fileName)
+                .flatMap(fileInfo -> {
+                    fileInfo.setFileStatus(FileInfoStatus.DELETED);
+                    // Assume fileInfoRepository.save returns a Mono<FileInfo>
+                    return fileInfoRepository.save(fileInfo);
+                })
+                .then();
     }
-
 
 }

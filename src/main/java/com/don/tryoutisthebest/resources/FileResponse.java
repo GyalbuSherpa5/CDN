@@ -1,6 +1,5 @@
 package com.don.tryoutisthebest.resources;
 
-import com.don.tryoutisthebest.model.FileContent;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,7 +21,6 @@ public class FileResponse {
     @JsonProperty("content_type")
     private String contentType;
 
-    private String fileContentId;
-
-    private FileContent fileContent;
+    @JsonProperty("actual_data")
+    private String actualData;
 }

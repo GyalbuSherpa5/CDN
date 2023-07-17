@@ -15,6 +15,7 @@ spring:
       host : localhost
       database: don
       port: 27018
+      field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
 
   javers:
     documentDbCompatibilityEnabled: false

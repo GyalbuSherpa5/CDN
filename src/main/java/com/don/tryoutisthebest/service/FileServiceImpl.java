@@ -26,9 +26,9 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public Mono<String> updateFile(FilePart filePart, String id) throws TikaException, IOException {
+    public Mono<String> updateFile(FilePart filePart) throws TikaException, IOException {
         detector.detect(filePart);
-        fileInfoService.updateFileInfo(filePart, id);
+        fileInfoService.updateFileInfo(filePart);
 
         minioService.putObject(filePart);
         return Mono.just("updated");

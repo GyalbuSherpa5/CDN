@@ -48,11 +48,10 @@ public class FileController {
 
     }
 
-    @PutMapping("/update/{id}")
-    public Mono<String> updateFile(FilePart filePart, @PathVariable String id) throws IOException, TikaException {
+    @PutMapping("/update")
+    public Mono<String> updateFile(FilePart filePart) throws IOException, TikaException {
         log.info("FileController | updateFile is called ");
-
-        return fileService.updateFile(filePart, id);
+        return fileService.updateFile(filePart);
     }
 
     @GetMapping("/getById/{id}")
@@ -70,20 +69,15 @@ public class FileController {
         return fileInfoService.deleteAllFileInfo();
     }
 
-    @DeleteMapping("/deleteFileContent")
-    public Mono<Void> deleteAllContent() {
-        return fileInfoService.deleteAllFileContent();
-    }
-
     @GetMapping("/roll")
-    public FileResponse rollbackToSnapshot(@RequestParam() String fileContentId, @RequestParam() String fileInfoId, @RequestParam("snapshotVersion") int snapshotVersion) {
+    public FileResponse rollbackToSnapshot(@RequestParam() String fileInfoId, @RequestParam("snapshotVersion") int snapshotVersion) {
 
-        return fileInfoService.rollbackToSnapshot(fileContentId, fileInfoId, snapshotVersion);
+        return fileInfoService.rollbackToSnapshot(fileInfoId, snapshotVersion);
 
     }
 
     @PostMapping("/deleteByFileName/{fileName}")
-    public Mono<String> deleteByName(@PathVariable String fileName){
+    public Mono<String> deleteByName(@PathVariable String fileName) {
         return fileInfoService.deleteByFileName(fileName).thenReturn("deleted");
     }
 

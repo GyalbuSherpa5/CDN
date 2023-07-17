@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 
 public interface FileInfoRepository extends ReactiveMongoRepository<FileInfo,String> {
 
-    Mono<FileInfo> findByName(String fileName);
+    Mono<FileInfo> findByFileName(String fileName);
 }

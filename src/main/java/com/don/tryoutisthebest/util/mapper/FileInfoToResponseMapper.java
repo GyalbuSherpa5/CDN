@@ -12,12 +12,11 @@ public class FileInfoToResponseMapper implements Function<FileInfo, FileResponse
     public FileResponse apply(FileInfo fileInfo) {
         return new FileResponse(
                 fileInfo.getId(),
-                fileInfo.getName(),
-                fileInfo.getPath(),
-                fileInfo.getSize(),
+                fileInfo.getFileName(),
+                fileInfo.getFilePath(),
+                fileInfo.getFileSize(),
                 fileInfo.getContentType(),
-                fileInfo.getFileContentId(),
-                fileInfo.getFileContent()
+                fileInfo.getActualData()
         );
     }
 }

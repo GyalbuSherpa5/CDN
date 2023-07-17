@@ -1,7 +1,6 @@
 package com.don.tryoutisthebest.changestream;
 
-
-import com.don.tryoutisthebest.model.FileContent;
+import com.don.tryoutisthebest.model.FileInfo;
 import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.minio.MinioUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,7 @@ public class ChangeStreamWatcher {
                 .filter(aggregation)
                 .build();
 
-        reactiveMongoTemplate.changeStream("file_content", options, FileContent.class)
+        reactiveMongoTemplate.changeStream("file_content", options, FileInfo.class)
                 .doOnNext(changeEvent -> {
                     try {
                         processChange(Objects.requireNonNull(changeEvent.getBody()));
@@ -46,7 +45,7 @@ public class ChangeStreamWatcher {
                 .subscribe();
     }
 
-    private void processChange(FileContent changedDocument) throws IOException {
+    private void processChange(FileInfo changedDocument) throws IOException {
         log.info("Upload file after change in db ");
 
         FilePart part = mime.createFilePart(changedDocument.getFileName(), changedDocument.getActualData());
