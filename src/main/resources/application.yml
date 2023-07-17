@@ -9,12 +9,19 @@ spring:
       max-request-size: 20MB
   data:
     mongodb:
+<<<<<<< HEAD
       uri: mongodb://adminUser:adminPassword@localhost/cms_db?authSource=admin
       database: don
       auto-index-creation: false
 #      host : localhost
+=======
+#      uri: mongodb+srv://iamdon123:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
+>>>>>>> b07b2961318313193ce07bc6bf0d5b06614562c6
 #      database: don
-#      port: 27017
+#      auto-index-creation: false
+      host : localhost
+      database: don
+      port: 27018
 
 javers:
     documentDbCompatibilityEnabled: false
