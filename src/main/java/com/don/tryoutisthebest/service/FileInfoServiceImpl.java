@@ -64,7 +64,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     @Transactional
-    public void saveFileInfo(FilePart filePart) throws IOException {
+    public String saveFileInfo(FilePart filePart) throws IOException {
 
         FileContent fileContent = new FileContent();
         fileContent.setActualData(mime.getMime(filePart));
@@ -78,6 +78,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         fileInfo.setFileContentId(id);
 
         fileInfoAuditRepo.save(fileInfo);
+        return "uploaded";
     }
 
     @NotNull

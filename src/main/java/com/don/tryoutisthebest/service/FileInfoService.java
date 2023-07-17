@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface FileInfoService {
-    void saveFileInfo(FilePart filePart) throws IOException;
+    String saveFileInfo(FilePart filePart) throws IOException;
     void updateFileInfo(FilePart filePart, String id) throws IOException;
     Mono<FileResponse> getFileDetail(String id);
     Mono<Void> deleteAllFileInfo();

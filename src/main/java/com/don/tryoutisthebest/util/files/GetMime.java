@@ -14,9 +14,11 @@ import reactor.core.scheduler.Schedulers;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Component
 public class GetMime {
@@ -61,7 +63,7 @@ public class GetMime {
             @Override
             public HttpHeaders headers() {
                 HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                headers.setContentType(getContentTypeFromFileName(filename));
                 headers.setContentDispositionFormData("file", filename);
                 return headers;
             }
@@ -74,5 +76,13 @@ public class GetMime {
                 return Flux.just(buffer);
             }
         };
+    }
+    public MediaType getContentTypeFromFileName(String filename) {
+        Path path = Paths.get(filename);
+        String contentTypeString = URLConnection.guessContentTypeFromName(path.toString());
+        if (contentTypeString == null) {
+            contentTypeString = "application/octet-stream"; // Default to octet-stream if content type cannot be determined
+        }
+        return MediaType.parseMediaType(contentTypeString);
     }
 }

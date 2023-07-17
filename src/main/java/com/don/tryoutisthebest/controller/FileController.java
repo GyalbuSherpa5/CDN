@@ -40,7 +40,7 @@ public class FileController {
     }
 
     @PostMapping("/uploads")
-    public Mono<String> uploadFile(FilePart filePart) throws IOException, TikaException {
+    public String uploadFile(FilePart filePart) throws IOException, TikaException {
 
         log.info("FileController | uploadFile is called :  ");
 

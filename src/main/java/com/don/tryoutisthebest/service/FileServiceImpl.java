@@ -19,11 +19,10 @@ public class FileServiceImpl implements FileService {
     private final MinioUtil minioService;
 
     @Override
-    public Mono<String> uploadFile(FilePart filePart) throws TikaException, IOException {
+    public String uploadFile(FilePart filePart) throws TikaException, IOException {
         detector.detect(filePart);
         minioService.putObject(filePart);
-        fileInfoService.saveFileInfo(filePart);
-        return Mono.just("done");
+        return fileInfoService.saveFileInfo(filePart);
     }
 
     @Override

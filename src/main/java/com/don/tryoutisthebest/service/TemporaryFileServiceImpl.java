@@ -11,7 +11,9 @@ import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.mapper.CheckerResponseMapper;
 import com.don.tryoutisthebest.util.mapper.MakerResponseMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tika.exception.TikaException;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -30,6 +32,7 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
     private final GetMime mime;
     private final CheckerResponseMapper checkerResponseMapper;
     private final MakerResponseMapper makerResponseMapper;
+    private final FileService fileService;
 
     @Override
     public Mono<String> saveTemporaryInfo(FilePart filePart, UploadRequestDto file) throws IOException {
@@ -74,7 +77,13 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
                 .flatMap(temporaryFile -> {
                     if (temporaryFile.getCount() == 0) {
                         temporaryFile.setStatus(RequestedFileStatus.APPROVED);
-                        temporaryFile.setActualContent("don");
+
+                        FilePart filePart = mime.createFilePart(fileName, temporaryFile.getActualContent());
+                        try {
+                            fileService.uploadFile(filePart);
+                        } catch (TikaException | IOException e) {
+                            return Mono.error(new FileProcessingException("gayena.."));
+                        }
                     }
                     return repository.save(temporaryFile);
                 })
