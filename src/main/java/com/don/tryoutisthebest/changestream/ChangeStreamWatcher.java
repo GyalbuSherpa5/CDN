@@ -1,5 +1,6 @@
 package com.don.tryoutisthebest.changestream;
 
+import com.don.tryoutisthebest.config.MinioConfig;
 import com.don.tryoutisthebest.model.FileInfo;
 import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.minio.MinioUtil;
@@ -20,6 +21,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ChangeStreamWatcher {
 
+    private final MinioConfig minioConfig;
     private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final MinioUtil minioService;
     private final GetMime mime;
@@ -49,7 +51,7 @@ public class ChangeStreamWatcher {
         log.info("Upload file after change in db ");
 
         FilePart part = mime.createFilePart(changedDocument.getFileName(), changedDocument.getActualData());
-        minioService.putObject(part);
+        minioService.putObject(part, minioConfig.getBucketName());
     }
 
 }

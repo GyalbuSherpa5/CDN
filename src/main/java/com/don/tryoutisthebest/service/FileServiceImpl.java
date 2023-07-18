@@ -1,5 +1,6 @@
 package com.don.tryoutisthebest.service;
 
+import com.don.tryoutisthebest.config.MinioConfig;
 import com.don.tryoutisthebest.util.files.FileDetector;
 import com.don.tryoutisthebest.util.minio.MinioUtil;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,12 @@ public class FileServiceImpl implements FileService {
     private final FileInfoService fileInfoService;
     private final FileDetector detector;
     private final MinioUtil minioService;
+    private final MinioConfig minioConfig;
 
     @Override
     public String uploadFile(FilePart filePart) throws TikaException, IOException {
         detector.detect(filePart);
-        minioService.putObject(filePart);
+        minioService.putObject(filePart, minioConfig.getBucketName());
         return fileInfoService.saveFileInfo(filePart);
     }
 
@@ -30,7 +32,7 @@ public class FileServiceImpl implements FileService {
         detector.detect(filePart);
         fileInfoService.updateFileInfo(filePart);
 
-        minioService.putObject(filePart);
+        minioService.putObject(filePart, minioConfig.getBucketName());
         return Mono.just("updated");
     }
 }

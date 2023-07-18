@@ -24,6 +24,7 @@ public class TemporaryFile {
 
     private String fileName;
     private String actualContent;
+    private String contentType;
     private List<String> requestedTo;
     private List<String> approvedBy = new ArrayList<>();
     private List<String> rejectedBy = new ArrayList<>();

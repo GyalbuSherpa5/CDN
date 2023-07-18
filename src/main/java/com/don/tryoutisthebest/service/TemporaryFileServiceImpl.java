@@ -1,5 +1,6 @@
 package com.don.tryoutisthebest.service;
 
+import com.don.tryoutisthebest.config.MinioConfig;
 import com.don.tryoutisthebest.enums.RequestedFileStatus;
 import com.don.tryoutisthebest.exception.FileProcessingException;
 import com.don.tryoutisthebest.model.TemporaryFile;
@@ -10,8 +11,8 @@ import com.don.tryoutisthebest.resources.UploadRequestDto;
 import com.don.tryoutisthebest.util.files.GetMime;
 import com.don.tryoutisthebest.util.mapper.CheckerResponseMapper;
 import com.don.tryoutisthebest.util.mapper.MakerResponseMapper;
+import com.don.tryoutisthebest.util.minio.MinioUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.exception.TikaException;
 import org.springframework.http.codec.multipart.FilePart;
@@ -20,7 +21,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.Collections;
 
 
 @Service
@@ -33,12 +33,20 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
     private final CheckerResponseMapper checkerResponseMapper;
     private final MakerResponseMapper makerResponseMapper;
     private final FileService fileService;
+    private final MinioUtil minioUtil;
+    private final MinioConfig minioConfig;
 
     @Override
-    public Mono<String> saveTemporaryInfo(FilePart filePart, UploadRequestDto file) throws IOException {
+    public Mono<String> saveTemporaryInfo(FilePart filePart, UploadRequestDto file) {
         TemporaryFile files = new TemporaryFile();
         files.setFileName(filePart.filename());
-        files.setActualContent(mime.getMime(filePart));
+
+        if (String.valueOf(filePart.headers().getContentType()).startsWith("image/")) {
+            minioUtil.putObject(filePart, minioConfig.getTempBucket());
+        } else {
+            files.setActualContent(mime.getMime(filePart));
+        }
+        files.setContentType(String.valueOf(filePart.headers().getContentType()));
         files.setRequestedTo(file.getRequestedTo());
         files.setCreatedBy(file.getCreatedBy());
         files.setStatus(RequestedFileStatus.REQUESTED);
@@ -81,12 +89,18 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
                     if (temporaryFile.getCount() == temporaryFile.getApprovedCount()) {
                         temporaryFile.setStatus(RequestedFileStatus.APPROVED);
 
-                        FilePart filePart = mime.createFilePart(fileName, temporaryFile.getActualContent());
-                        try {
-                            fileService.uploadFile(filePart);
-                        } catch (TikaException | IOException e) {
-                            return Mono.error(new FileProcessingException("gayena.."));
+                        if (temporaryFile.getContentType().startsWith("image/")) {
+                                minioUtil.migrateObject(minioConfig.getBucketName(), minioConfig.getTempBucket(), temporaryFile.getFileName());
                         }
+                        else{
+                            FilePart filePart = mime.createFilePart(fileName, temporaryFile.getActualContent());
+                            try {
+                                fileService.uploadFile(filePart);
+                            } catch (TikaException | IOException e) {
+                                return Mono.error(new FileProcessingException("gayena.."));
+                            }
+                        }
+
                     }
                     return repository.save(temporaryFile);
                 })

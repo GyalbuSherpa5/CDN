@@ -1,20 +1,11 @@
 package com.don.tryoutisthebest.util.minio;
 
 import com.don.tryoutisthebest.config.MinioConfig;
-import io.minio.BucketExistsArgs;
-import io.minio.GetObjectArgs;
-import io.minio.ListObjectsArgs;
-import io.minio.MakeBucketArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.Result;
-import io.minio.StatObjectArgs;
-import io.minio.StatObjectResponse;
+import io.minio.*;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.codec.multipart.FilePart;
@@ -22,9 +13,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.*;
-import java.net.FileNameMap;
-import java.net.URLConnection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,31 +31,7 @@ public class MinioUtil {
     private final MinioConfig minioConfig;
 
     @SneakyThrows
-    public void putObject(File file) {
-
-        log.info("MinioUtil | putObject is called");
-
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("username", "don");
-
-        InputStream targetStream = FileUtils.openInputStream(file);
-
-        FileNameMap fileNameMap = URLConnection.getFileNameMap();
-        String contentType = fileNameMap.getContentTypeFor(file.getPath());
-
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(minioConfig.getBucketName())
-                        .object(file.getPath())
-                        .stream(targetStream, -1, minioConfig.getFileSize())
-                        .contentType(contentType)
-                        .userMetadata(metadata)
-                        .build()
-        );
-    }
-
-    @SneakyThrows
-    public void putObject(FilePart filePart) {
+    public void putObject(FilePart filePart, String bucketName) {
 
         log.info("MinioUtil | putObject is called");
 
@@ -75,7 +43,7 @@ public class MinioUtil {
 
         minioClient.putObject(
                 PutObjectArgs.builder()
-                        .bucket(minioConfig.getBucketName())
+                        .bucket(bucketName)
                         .object(filePart.filename())
                         .stream(inputStream, -1, minioConfig.getFileSize())
                         .contentType(String.valueOf(filePart.headers().getContentType()))
@@ -226,6 +194,21 @@ public class MinioUtil {
         }
         return null;
     }
+
+    @SneakyThrows
+    public void migrateObject(String bucketName, String tempBucket, String objectName) {
+        minioClient.copyObject(
+                CopyObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectName)
+                        .source(
+                                CopySource.builder()
+                                        .bucket(tempBucket)
+                                        .object(objectName)
+                                        .build())
+                        .build());
+    }
+
 }
 
 

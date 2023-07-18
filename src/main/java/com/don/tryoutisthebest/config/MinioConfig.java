@@ -51,6 +51,13 @@ public class MinioConfig {
     private String bucketName;
 
     /**
+     * //" temp bucket "
+     */
+
+    @Value("${minio.temp-bucket}")
+    private String tempBucket;
+
+    /**
      * The maximum size of the picture
      */
 
@@ -66,10 +73,7 @@ public class MinioConfig {
 
     @Bean
     public MinioClient minioClient() {
-        return MinioClient.builder()
-                .credentials(accessKey, secretKey)
-                .endpoint(endpoint, port, secure)
-                .build();
+        return MinioClient.builder().credentials(accessKey, secretKey).endpoint(endpoint, port, secure).build();
     }
 }
 

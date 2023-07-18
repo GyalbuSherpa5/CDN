@@ -23,8 +23,8 @@ public class TemporaryFileController {
     private final TemporaryFileService fileService;
 
     @PostMapping("/request")
-    public Mono<String> uploadTemporaryFile(FilePart filePart, @RequestPart UploadRequestDto file) throws IOException {
-        return fileService.saveTemporaryInfo(filePart,file);
+    public Mono<String> uploadTemporaryFile(FilePart filePart, @RequestPart UploadRequestDto fileUploadRequest) throws IOException {
+        return fileService.saveTemporaryInfo(filePart,fileUploadRequest);
     }
 
     @GetMapping("/getRequest/{userName}")

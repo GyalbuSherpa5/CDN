@@ -9,12 +9,12 @@ spring:
       max-request-size: 20MB
   data:
     mongodb:
-#      uri: mongodb+srv://iamdon123:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
-#      database: don
-#      auto-index-creation: false
-      host : localhost
+      uri: mongodb+srv://iamdon123:iamdon123@filedetails.7iehtdf.mongodb.net/don?retryWrites=true&w=majority
       database: don
-      port: 27018
+      auto-index-creation: false
+#      host : localhost
+#      database: don
+#      port: 27018
       field-naming-strategy: org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy
 
   javers:
@@ -32,6 +32,7 @@ minio:
   secretKey: iamdon123 # Login Password
   secure: false
   bucket-name: testbucket # Bucket Name
+  temp-bucket: tempbucket
   image-size: 20971520 #  Maximum size of picture file
   file-size: 20971520 #  Maximum file size
 

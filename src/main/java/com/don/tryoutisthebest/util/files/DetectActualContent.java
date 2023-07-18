@@ -36,7 +36,7 @@ public class DetectActualContent {
     }
 
     public String detectFileExtension(FilePart filePart) throws TikaException, IOException {
-         InputStream inputStreamFromFluxDataBuffer = minioService.getInputStreamFromFluxDataBuffer(filePart.content());
+        InputStream inputStreamFromFluxDataBuffer = minioService.getInputStreamFromFluxDataBuffer(filePart.content());
 
         TikaConfig tc = new TikaConfig();
         Metadata md = new Metadata();

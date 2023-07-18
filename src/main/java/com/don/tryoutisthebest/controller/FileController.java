@@ -1,5 +1,6 @@
 package com.don.tryoutisthebest.controller;
 
+import com.don.tryoutisthebest.config.MinioConfig;
 import com.don.tryoutisthebest.model.FileInfo;
 import com.don.tryoutisthebest.resources.FileResponse;
 import com.don.tryoutisthebest.service.FileInfoService;
@@ -28,6 +29,7 @@ public class FileController {
     private final FileInfoService fileInfoService;
     private final GetMime mime;
     private final MinioUtil minioUtil;
+    private final MinioConfig minioConfig;
 
     @PostMapping("/work/{fileName}")
     public String works(@PathVariable String fileName, @RequestBody Map<String, Object> requestBody) throws IOException {
@@ -37,7 +39,7 @@ public class FileController {
         System.out.println(fileName);
         FilePart filePart = mime.createFilePart(fileName, requestBody.values().toString());
         System.out.println(filePart.filename());
-        minioUtil.putObject(filePart);
+        minioUtil.putObject(filePart,minioConfig.getBucketName());
         return "working";
     }
 
