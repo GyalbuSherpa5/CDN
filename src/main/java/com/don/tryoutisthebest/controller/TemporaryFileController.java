@@ -36,12 +36,15 @@ public class TemporaryFileController {
         return fileService.getMyRequest(userName);
     }
 
-    @PostMapping("/approve/{approvedByWhoUser}/{fileName}/{yesKiNo}")
-    public Mono<String> approve(@PathVariable String approvedByWhoUser, @PathVariable String fileName, @PathVariable boolean yesKiNo) {
-
-        fileService.giveApproval(approvedByWhoUser, fileName, yesKiNo);
-
-        return Mono.just("approve vayo dai");
+    @PostMapping("/approve/{approvedByWhoUser}/{fileName}")
+    public Mono<String> approve(@PathVariable String approvedByWhoUser, @PathVariable String fileName) {
+        fileService.giveApproval(approvedByWhoUser, fileName);
+        return Mono.just("approve vayo hai");
+    }
+    @PostMapping("/reject/{approvedByWhoUser}/{fileName}")
+    public Mono<String> reject(@PathVariable String approvedByWhoUser, @PathVariable String fileName) {
+        fileService.reject(approvedByWhoUser, fileName);
+        return Mono.just("reject vayo hai");
     }
 
     @DeleteMapping("/deleteAllTemp")

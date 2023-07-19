@@ -2,6 +2,7 @@ package com.don.tryoutisthebest.service;
 
 import com.don.tryoutisthebest.config.MinioConfig;
 import com.don.tryoutisthebest.enums.RequestedFileStatus;
+import com.don.tryoutisthebest.exception.ApprovalException;
 import com.don.tryoutisthebest.exception.FileProcessingException;
 import com.don.tryoutisthebest.model.TemporaryFile;
 import com.don.tryoutisthebest.repository.TemporaryFileRepository;
@@ -66,7 +67,7 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
                 .map(checkerResponseMapper);
     }
 
-    @Override
+    /*@Override
     public void giveApproval(String approvedByWhoUser, String fileName, boolean yesKiNo) {
         repository.findByFileName(fileName)
                 .flatMap(temporaryFile -> {
@@ -105,7 +106,79 @@ public class TemporaryFileServiceImpl implements TemporaryFileService {
                     return repository.save(temporaryFile);
                 })
                 .subscribe();
+    }*/
+
+    @Override
+    public void giveApproval(String approvedByWhoUser, String fileName) {
+        repository.findByFileName(fileName)
+                .flatMap(temporaryFile -> approve(temporaryFile, approvedByWhoUser))
+                .subscribe();
     }
+
+    public Mono<TemporaryFile> approve(TemporaryFile temporaryFile, String approvedByWhoUser) {
+        temporaryFile.setCount(temporaryFile.getRequestedTo().size());
+        processApproval(temporaryFile, approvedByWhoUser);
+
+        return repository.save(temporaryFile).
+                flatMap(this::handleFinalStatus);
+    }
+
+    public void processApproval(TemporaryFile temporaryFile, String approvedByWhoUser) {
+        if (!temporaryFile.getApprovedBy().contains(approvedByWhoUser)) {
+            temporaryFile.getApprovedBy().add(approvedByWhoUser);
+            temporaryFile.setApprovedCount(temporaryFile.getApprovedCount() + 1);
+        }
+        else {
+            log.error("TemporaryFileServiceImpl | Error ! already approved ");
+            throw new ApprovalException("already approved!!");
+        }
+
+    }
+
+    @Override
+    public void reject(String approvedByWhoUser, String fileName) {
+        repository.findByFileName(fileName)
+                .flatMap(temporaryFile -> rejects(temporaryFile, approvedByWhoUser))
+                .subscribe();
+    }
+
+    public Mono<TemporaryFile> rejects(TemporaryFile temporaryFile, String approvedByWhoUser) {
+
+        processRejection(temporaryFile, approvedByWhoUser);
+
+        return repository.save(temporaryFile).
+                flatMap(this::handleFinalStatus);
+    }
+
+    public void processRejection(TemporaryFile temporaryFile, String approvedByWhoUser) {
+        if (!temporaryFile.getRejectedBy().contains(approvedByWhoUser)) {
+            temporaryFile.getRejectedBy().add(approvedByWhoUser);
+            temporaryFile.setStatus(RequestedFileStatus.REJECTED);
+        }
+        else {
+            log.error("TemporaryFileServiceImpl | Error ! already rejected");
+            throw new ApprovalException("already rejected!!");
+        }
+
+    }
+
+    public Mono<TemporaryFile> handleFinalStatus(TemporaryFile temporaryFile) {
+        if (temporaryFile.getCount() == temporaryFile.getApprovedCount()) {
+            temporaryFile.setStatus(RequestedFileStatus.APPROVED);
+            if (temporaryFile.getContentType().startsWith("image/")) {
+                minioUtil.migrateObject(minioConfig.getBucketName(), minioConfig.getTempBucket(), temporaryFile.getFileName());
+            } else {
+                FilePart filePart = mime.createFilePart(temporaryFile.getFileName(), temporaryFile.getActualContent());
+                try {
+                    fileService.uploadFile(filePart);
+                } catch (TikaException | IOException e) {
+                    return Mono.error(new FileProcessingException("gayena.."));
+                }
+            }
+        }
+        return repository.save(temporaryFile);
+    }
+
 
     @Override
     public Mono<Void> deleteAllFileTemp() {

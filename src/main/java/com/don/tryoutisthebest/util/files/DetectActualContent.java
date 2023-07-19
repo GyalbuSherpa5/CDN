@@ -11,7 +11,6 @@ import org.apache.tika.metadata.TikaCoreProperties;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -22,7 +21,7 @@ public class DetectActualContent {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final MinioUtil minioService;
 
-    public boolean detectJsonAndTextType(FilePart filePart) throws IOException, TikaException {
+    public boolean detectJsonAndTextType(FilePart filePart){
 
         String json = mime.getMime(filePart);
         boolean valid = true;

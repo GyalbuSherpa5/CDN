@@ -21,7 +21,9 @@ public interface TemporaryFileService {
     Flux<CheckerResponseDto> getAllRequests(String userName);
 
 
-    void giveApproval(String approvedByWhoUser, String fileName,boolean yesKiNo);
+    void giveApproval(String approvedByWhoUser, String fileName);
+
+    void reject(String approvedByWhoUser, String fileName);
 
     Mono<Void> deleteAllFileTemp();
 
